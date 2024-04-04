@@ -65,10 +65,18 @@ def login():
     access_token = create_access_token(identity=email)
     return jsonify(access_token=access_token)
 
-
-
 # Protect a route with jwt_required, which will kick out requests
 # # without a valid JWT present.
+@app.route('/validate-token/', methods=['GET'])
+@jwt_required()
+def validate_token():
+    current_user = get_jwt_identity()
+    current_user_data = Users.query.filter_by(email=current_user).first()
+
+    if  current_user_data == None:
+        return jsonify({"msg": "User doesn't exists", "is_logged": False}), 404
+     
+    return jsonify({"is_logged": True }), 200
 
 @app.route('/users/favorites/', methods=['GET'])
 @jwt_required()
@@ -115,14 +123,9 @@ def signup():
 
         return jsonify({"msg": "New user created"}), 200
     
-    
-    
     else :
         return jsonify({"msg": "User exist, try recover your password"}), 200
     
-        
-
-
 
 # PEOPLE
 
@@ -279,7 +282,6 @@ def get_all_users():
 
 
 # GET USERS FAVORITES 
-    
 
 @app.route('/users/favorites/<int:users_id>', methods=['GET'])
 def get_user_favorites(users_id):
@@ -392,15 +394,12 @@ def delete_favorite_planet(planets_id):
         print(query_results)
 
         if query_results:
-            
             db.session.delete(query_results)
             db.session.commit()
         
             return ({"msg": "Deleted succesfull"}), 200
-    
 
         else:
-
              return ({"msg": "Planet already deleted"}), 200
         
 
@@ -412,7 +411,6 @@ def delete_favorite_planet(planets_id):
 
     elif planet_exist is None:
         return ({"msg": "This planet doesn't exist"}), 400
-
 
 
 # Delete Favorite Character 
@@ -435,10 +433,8 @@ def delete_favorite_people(people_id):
             db.session.commit()
         
             return ({"msg": "Deleted succesfull"}), 200
-    
 
         else:
-
              return ({"msg": "Character already deleted"}), 200
         
 
@@ -490,7 +486,6 @@ def delete_favorite_people_user(people_id, users_id):
         
 
 # UPDATE PEOPLE
-    
 @app.route('/people/<int:people_id>', methods=['PUT'])
 def update_people(people_id):
     new_data= request.json
@@ -502,23 +497,10 @@ def update_people(people_id):
             setattr(query_results, key, value)  
 
         db.session.commit()
-    
         return ({"msg": "People Updated"}), 200
 
     else:
-
         return ({"msg": "People can't updated"}), 400
-        
-    # elif user_exist is None and people_exist is None:
-    #     return ({"msg": "There aren't users or characters to delete"}), 400
-  
-    # elif user_exist is None:
-    #     return ({"msg": "This user doesn't exist"}), 400
-
-    # elif people_exist is None:
-    #     return ({"msg": "This character doesn't exist"}), 400   
-
-
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
